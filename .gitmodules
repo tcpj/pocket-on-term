@@ -1,0 +1,6 @@
+[submodule "pocketapi"]
+	path = pocketapi
+	url = git://github.com/jaduse/pocketapi.git
+[submodule "pot/pocketapi"]
+	path = pot/pocketapi
+	url = git://github.com/jaduse/pocketapi.git
