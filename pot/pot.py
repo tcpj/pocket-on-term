@@ -9,8 +9,8 @@ import pickle
 from collections import OrderedDict
 
 from pot.pocketapi.pocket import Pocket
-from reader import Reader
-from reader import Article
+from pot.reader import Reader
+from pot.reader import Article
 
 
 CONFIG_PATH = os.path.join(
@@ -46,9 +46,26 @@ def save_config(sec, opt, val):
         config.add_section(sec)
 
     config.set(sec, opt, val)
-    
+
     with open(CONFIG_PATH, "w") as config_file:
-        config.write(config_file)    
+        config.write(config_file)
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("command")
+    parser.add_argument("cmd_args", nargs=argparse.REMAINDER)
+
+    ns = parser.parse_args(sys.argv[1:])
+
+    command = commands[ns.command]
+    cmd_args = ns.cmd_args
+
+    if isinstance(command, tuple):
+        command, opt = command
+        cmd_args.insert(0, opt)
+
+    command(*cmd_args).executor()
 
 
 class Command(object):
@@ -126,14 +143,17 @@ class Get(Command):
         return res
 
     def print_result(self, data):
-        for i, a in enumerate(data):
-            print("[{}] {}".format(i, a.title))
+        if data:
+            for i, a in enumerate(data):
+                print("[{}] {}".format(i, a.title))
 
     def parse(self, res):
-        data = res["list"]
+        if not res["list"]:
+            return 
+
         a_list = OrderedDict(
             sorted(
-                data.items(),
+                res["list"].items(),
                 key=lambda k_v: k_v[1]["sort_id"]
             )
         )
@@ -181,7 +201,7 @@ class Read(Command):
         if state:
             article = state[self["id"]]
             Reader(
-                article, 
+                article,
                 config["reader"] if config.has_section("reader") else None)
 
 
@@ -336,7 +356,7 @@ class Set(Command):
 
     def exec(self):
         save_config(
-            self["section"], self["option"], self["value"]) 
+            self["section"], self["option"], self["value"])
 
 
 class Init(Command):
@@ -348,7 +368,7 @@ class Init(Command):
         p_cli = Pocket(config["pocket"], redirect_uri=(
             "https://www.googledrive.com/host/"
             "0B3AlooTOdshyUi02M3V3UWVCdzA"))
-        
+
         req_code = p_cli.get_request()
         link = (
             "https://getpocket.com/auth/authorize?"
@@ -364,35 +384,23 @@ class Init(Command):
             save_config("pocket", o, v)
 
 
+state = load_state()
+config = load_config()
+
+commands = {
+    "set": Set,
+    "init": Init,
+    "get": Get,
+    "add": Add,
+    "read": Read,
+    "archive": (Modify, "archive"),
+    "readd": (Modify, "readd"),
+    "favorite": (Modify, "favorite"),
+    "unfavorite": (Modify, "unfavorite"),
+    "delete": (Modify, "delete"),
+    "tag": Tag
+}
+
+
 if __name__ == "__main__":
-
-    commands = {
-        "set": Set,
-        "init": Init,
-        "get": Get,
-        "add": Add,
-        "read": Read,
-        "archive": (Modify, "archive"),
-        "readd": (Modify, "readd"),
-        "favorite": (Modify, "favorite"),
-        "unfavorite": (Modify, "unfavorite"),
-        "delete": (Modify, "delete"),
-        "tag": Tag
-    }
-
-    state = load_state()
-    config = load_config()
-    parser = argparse.ArgumentParser()
-    parser.add_argument("command")
-    parser.add_argument("cmd_args", nargs=argparse.REMAINDER)
-
-    ns = parser.parse_args(sys.argv[1:])
-
-    command = commands[ns.command]
-    cmd_args = ns.cmd_args
-
-    if isinstance(command, tuple):
-        command, opt = command
-        cmd_args.insert(0, opt)
-
-    command(*cmd_args).executor()
+    main()
