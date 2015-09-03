@@ -1,4 +1,5 @@
 # pocket-on-term
+[![Build Status](https://travis-ci.org/jaduse/pocket-on-term.svg?branch=master)](https://travis-ci.org/jaduse/pocket-on-term)
 Pocket client in terminal
 
 ## Usage:
