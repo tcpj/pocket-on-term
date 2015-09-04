@@ -2,12 +2,19 @@
 [![Build Status](https://travis-ci.org/jaduse/pocket-on-term.svg?branch=master)](https://travis-ci.org/jaduse/pocket-on-term)
 Pocket client in terminal
 
+## Installation
+Currently only from github:
+
+```
+$ pip install git+https://github.com/jaduse/pocket-on-term
+```
+
 ## Usage:
 Firstly, register new application at http://getpocket.com/developer. You will obtain consumer key, which is important to run this application. Then config your pot.py:
 
 ```
-$ pot.py set pocket consumer_key YOUR_KEY_GOES_HERE
-$ pot.py init
+$ pot set pocket consumer_key YOUR_KEY_GOES_HERE
+$ pot init
 ```
 
 Well, after granting access, you can do whatever you want. Actualy... no.
@@ -16,7 +23,7 @@ Well, after granting access, you can do whatever you want. Actualy... no.
 Simple list articles by given criterie. Using command get:
 
 ```
-$ pot.py get _state_ _count_ [-t _tag_] [-f] [-s _sort_by_]
+$ pot get _state_ _count_ [-t _tag_] [-f] [-s _sort_by_]
 [0] Article
 .
 .
@@ -28,7 +35,7 @@ $ pot.py get _state_ _count_ [-t _tag_] [-f] [-s _sort_by_]
 Read one of listed articles by given index from last output:
 
 ```
-$ pot.py read _id_
+$ pot read _id_
 ```
 
 Reader gui will appear. Controls are easy. Up, Down, Page Up, Page Down, Home and End. You can see links indexed like [5] by pressing "r". Popup will show up with link list. Press "q" to close. 
@@ -37,9 +44,9 @@ Reader gui will appear. Controls are easy. Up, Down, Page Up, Page Down, Home an
 Archiving one or many articles by given index from last output:
 
 ```
-$ pot.py archive _ids_
+$ pot archive _ids_
 example:
-$ pot.py archive 0 1 2 3
+$ pot archive 0 1 2 3
 Success!
 ```
 
@@ -49,7 +56,7 @@ You can easily archive more articles
 Add an article to your list:
 
 ```
-$ pot.py add _url_
+$ pot add _url_
 OK - _resolved_title_
 ```
 
@@ -57,7 +64,7 @@ OK - _resolved_title_
 Delete an article from your list. Permanently:
 
 ```
-$ pot.py delete 5
+$ pot delete 5
 Success!
 ```
 
@@ -65,7 +72,7 @@ Success!
 Revive an article from archive:
 
 ```
-$ pot.py readd 5
+$ pot readd 5
 Success!
 ```
 
@@ -73,23 +80,23 @@ Success!
 Make your article favorited. Or take it's favoritness away:
 
 ```
-$ pot.py favorite 5 6
-$ pot.py unfavorite 6
+$ pot favorite 5 6
+$ pot unfavorite 6
 ```
 
 ### Tags!
 Tagging your articles. Examples:
 
 ```
-$ pot.py tag add 1 5 6 --tags rekt smashing_tag puppets
-$ pot.py tag remove 1 --tags rekt
-$ pot.py tag replace 6 --tags kittens
-$ pot.py tag clear 5
+$ pot tag add 1 5 6 --tags rekt smashing_tag puppets
+$ pot tag remove 1 --tags rekt
+$ pot tag replace 6 --tags kittens
+$ pot tag clear 5
 ```
 
 Your homework: figure out, what each command does :)
 
-### LICENSE
+## LICENSE
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
