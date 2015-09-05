@@ -23,13 +23,15 @@ Well, after granting access, you can do whatever you want. Actualy... no.
 Simple list articles by given criterie. Using command get:
 
 ```
-$ pot get _state_ _count_ [-t _tag_] [-f] [-s _sort_by_]
+$ pot get _state_ _count_ [-t _tag_] [-f] [-s _sort_by_] [-o _offset_]
 [0] Article
 .
 .
 .
 [_count_] Another article
-```
+
+$ pot get unread 5 -t programming -o 5 # so, you want 5 unread articles, with "programming" tag, and you want start from fifth article. So you want 5 articles that come after article 5, so you get articles 6, 7, 8, 9 and 10. 
+ ```
 
 ### Read article
 Read one of listed articles by given index from last output:
