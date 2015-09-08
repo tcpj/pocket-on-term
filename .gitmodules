@@ -2,5 +2,5 @@
 	path = pocketapi
 	url = git://github.com/jaduse/pocketapi.git
 [submodule "pot/pocketapi"]
-	path = pot/pocketapi
+	path = src/pocket_on_term/pocketapi
 	url = git://github.com/jaduse/pocketapi.git

@@ -1,6 +1,8 @@
 from setuptools import setup
 from setuptools import find_packages
 
+
+
 setup(name="pocket-on-term",
     version="0.1",
     description="Pocket client for terminals",
@@ -9,9 +11,12 @@ setup(name="pocket-on-term",
     author_email="jaduse@gmail.com",
     license="MIT",
     packages=find_packages(),
+    zip_safe=True,
     install_requires=["urwid"],
     entry_points={
-        'console_scripts': [
-            'pot = pot.pot:main'
-        ]}
-    )
+            'console_scripts': [
+                'pot = pot:main',
+        ]
+    }
+
+)

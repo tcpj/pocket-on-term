@@ -11,7 +11,7 @@ from subprocess import Popen
 from subprocess import PIPE
 from subprocess import SubprocessError
 
-from pot.pocketapi.pocket import PocketUtils
+from .pocketapi import PocketUtils
 
 term_w, term_h = os.get_terminal_size()
 
