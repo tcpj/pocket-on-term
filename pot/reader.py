@@ -28,7 +28,6 @@ class Reader(object):
     ]
 
     def __init__(self, article, config=None):
-        self.readability_client = Readability(article.url)
         self.article = article
         self.config = config if config else {
             "theme": "default"
