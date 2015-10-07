@@ -54,6 +54,20 @@ def save_config(sec, opt, val):
 
 def main():
     parser = argparse.ArgumentParser()
+
+    commands = {
+        "set": Set,
+        "init": Init,
+        "get": Get,
+        "add": Add,
+        "read": Read,
+        "archive": (Modify, "archive"),
+        "readd": (Modify, "readd"),
+        "favorite": (Modify, "favorite"),
+        "unfavorite": (Modify, "unfavorite"),
+        "delete": (Modify, "delete"),
+        "tag": Tag
+    }
     parser.add_argument("command")
     parser.add_argument("cmd_args", nargs=argparse.REMAINDER)
 
@@ -123,7 +137,7 @@ class Get(Command):
                 "dest": "favorite",
                 "action": "store_const",
                 "const": 1,
-                "default": 0
+                "default": None
             }
         ),
         (
@@ -138,19 +152,27 @@ class Get(Command):
 
     def exec(self):
         q = vars(self.ns)
+        q["detailType"] = "complete"
         p_cli = Pocket(config["pocket"])
         res = p_cli.get(q)
 
         return res
 
     def print_result(self, data):
-        if data:
-            for i, a in enumerate(data):
-                print("[{}] {}".format(i, a.title))
+        if not data:
+            return
+
+        for i, a in enumerate(data):
+            fav = "[★]" if a.favorite else "[ ]"
+            tags = "[{}]".format(", ".join(a.tags)) if (
+                hasattr(a, "tags")) else ""
+
+            title = a.resolved_title
+            print("[{}] {} {} {}".format(i, fav, title, tags))
 
     def parse(self, res):
         if not res["list"]:
-            return 
+            return
 
         a_list = OrderedDict(
             sorted(
@@ -159,9 +181,7 @@ class Get(Command):
             )
         )
 
-        a_list = [
-            Article(id, a["resolved_title"], a["resolved_url"])
-            for id, a in a_list.items()]
+        a_list = [Article(id, a) for id, a in a_list.items()]
 
         save_state(a_list)
         return a_list
@@ -192,18 +212,20 @@ class Add(Command):
 
 class Read(Command):
 
-    arguments = [
-        ("id", {"type": int})]
+    arguments = [("id", {"type": int})]
 
     def __init__(self, *args):
         super(Read, self).__init__(self.arguments, *args)
 
     def exec(self):
-        if state:
-            article = state[self["id"]]
-            Reader(
-                article,
-                config["reader"] if config.has_section("reader") else None)
+        if not state:
+            return
+        
+        article = state[self["id"]]
+        r_config = config["reader"] if (
+            config.has_section("reader")) else None
+
+        Reader(article, r_config)
 
 
 class Modify(Command):
@@ -387,21 +409,3 @@ class Init(Command):
 
 state = load_state()
 config = load_config()
-
-commands = {
-    "set": Set,
-    "init": Init,
-    "get": Get,
-    "add": Add,
-    "read": Read,
-    "archive": (Modify, "archive"),
-    "readd": (Modify, "readd"),
-    "favorite": (Modify, "favorite"),
-    "unfavorite": (Modify, "unfavorite"),
-    "delete": (Modify, "delete"),
-    "tag": Tag
-}
-
-
-if __name__ == "__main__":
-    main()

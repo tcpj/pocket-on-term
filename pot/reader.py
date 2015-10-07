@@ -6,14 +6,17 @@ import json
 import sys
 import os
 import urwid
+import webbrowser
 
 from subprocess import Popen
 from subprocess import PIPE
 from subprocess import SubprocessError
 
+from bs4 import BeautifulSoup
+from bs4 import Tag
+
 from .pocketapi import PocketUtils
 
-term_w, term_h = os.get_terminal_size()
 
 
 class Reader(object):
@@ -26,29 +29,32 @@ class Reader(object):
         ("popup", "black", "dark green"),
         ("header", "white", "white", "bold")
     ]
-
+    
+    term_w, term_h = os.get_terminal_size()
+    
     def __init__(self, article, config=None):
         self.article = article
         self.config = config if config else {
             "theme": "default"
         }
 
-        self.title = article.title if (
-            len(article.title) <= term_w
-        ) else article.title[:term_w - 1]
+        self.title = article.resolved_title if (
+            len(article.resolved_title) <= self.term_w
+        ) else article.resolved_title[:self.term_w - 1]
 
         self.buffer, self.ref = self.parse()
 
         self.set_up()
 
+
     def set_up(self):
         self.offset = 0
-        self.size = (term_w, term_h)
-        self.content = Content(self.buffer, self.ref)
+        self.size = (self.term_w, self.term_h)
+        self.content = Content(self.buffer, self.ref, self.size)
         self.status = urwid.ProgressBar(
             "pg normal",
             "pg complete",
-            done=len(self.buffer)-term_h
+            done=len(self.buffer)-self.term_h
         )
 
         self.scr = urwid.Frame(
@@ -72,8 +78,8 @@ class Reader(object):
         elinks_params = [
             "elinks",
             "-dump", "1",
-            # "-dump-color-mode", "1",
-            "-dump-width", str(term_w)
+            #"-dump-color-mode", "1",
+            "-dump-width", str(self.term_w)
         ]
 
         elinks_proc = Popen(
@@ -116,13 +122,13 @@ class Content(urwid.PopUpLauncher, urwid.WidgetWrap):
         "update_pg"
     ]
 
-    def __init__(self, buffer, links):
+    def __init__(self, buffer, links, size):
         self.buffer = buffer
         self.text = urwid.Text("")
         self.popup = Dialog(links)
         self.fill = urwid.Filler(self.text)
         self.offset = 0
-
+        self.term_w, self.term_h = size
         super(Content, self).__init__(self.fill)
 
         urwid.connect_signal(self, "keypress", self.keypress)
@@ -131,7 +137,7 @@ class Content(urwid.PopUpLauncher, urwid.WidgetWrap):
         self.redraw()
 
     def redraw(self):
-        cur_e = self.offset + term_h - 2
+        cur_e = self.offset + self.term_h - 2
         lines = self.buffer[self.offset:cur_e]
 
         self.text.set_text(lines)
@@ -143,22 +149,22 @@ class Content(urwid.PopUpLauncher, urwid.WidgetWrap):
                 self.offset -= 1
 
         def down():
-            if (self.offset + term_h < len(self.buffer)):
+            if (self.offset + self.term_h < len(self.buffer)):
                 self.offset += 1
 
         def home():
             self.offset = 0
 
         def end():
-            self.offset = len(self.buffer) - term_h - 1
+            self.offset = len(self.buffer) - self.term_h - 1
 
         def page_down():
-            if self.offset + 2*term_h < len(self.buffer):
-                self.offset += term_h
+            if self.offset + 2 * self.term_h < len(self.buffer):
+                self.offset += self.term_h
 
         def page_up():
             if self.offset - term_h > 0:
-                self.offset -= term_h
+                self.offset -= self.term_h
 
         def r():
             self.open_pop_up()
@@ -181,8 +187,8 @@ class Content(urwid.PopUpLauncher, urwid.WidgetWrap):
         return {
             'left': 0,
             'top': 2,
-            'overlay_width': term_w,
-            'overlay_height': term_h//3
+            'overlay_width': self.term_w,
+            'overlay_height': self.term_h//3
         }
 
     def selectable(self):
@@ -197,7 +203,6 @@ class Dialog(urwid.WidgetWrap):
         self.body = [urwid.Text(l) for l in links]
         self.listbox = urwid.ListBox(
             urwid.SimpleFocusListWalker(self.body))
-
         self.win = urwid.LineBox(
             self.listbox,
             title="Links"
@@ -255,16 +260,39 @@ class Readability(object):
 
 class Article(object):
 
-    def __init__(self, id, title, url):
+    def __init__(self, id, item):
         self.id = id
-        self.title = title
-        self.url = url
-
+        self.__dict__.update(item)
+        self.has_image = True if self.has_image == "1" else False
+        self.has_video = True if self.has_video == "1" else False
+        self.favorite = True if self.favorite == "1" else False
+            
     @property
     def text(self):
-        response = PocketUtils.parser(self.url)
 
+        def replace_RIL(divs, pholder, links):
+            for div in divs:
+                itm_id = div["id"].rsplit("_", 1)[-1]
+                a_tag = bs.new_tag("a", href=links[itm_id]["src"])
+                a_tag.insert(0, "[{}]".format(pholder))
+                div.replace_with(a_tag)
+        
+        response = PocketUtils.parser(self.resolved_url)
+        
         if response["responseCode"] != "200":
-            return None
+            return
+        
+        bs = BeautifulSoup(response["article"], "html.parser")
 
-        return response["article"]
+        if self.has_image:
+            replace_RIL(
+                bs.findAll("div", class_="RIL_IMG"),
+                "IMG", self.images)
+             
+        if self.has_video:
+            replace_RIL(bs.findAll(
+                "div", class_="RIL_VIDEO"),
+                "VIDEO", self.videos)
+        
+        return bs.prettify()
+
