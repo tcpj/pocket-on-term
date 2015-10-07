@@ -15,7 +15,7 @@ setup(name="pocket-on-term_dev",
     install_requires=["urwid"],
     entry_points={
             'console_scripts': [
-                'pot-dev = pot:main',
+                'pot = pot:main',
         ]
     }
 
