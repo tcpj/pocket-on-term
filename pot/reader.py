@@ -164,7 +164,7 @@ class Content(urwid.PopUpLauncher, urwid.WidgetWrap):
                 self.offset += self.term_h
 
         def page_up():
-            if self.offset - term_h > 0:
+            if self.offset - self.term_h > 0:
                 self.offset -= self.term_h
 
         def r():
