@@ -220,7 +220,7 @@ class Read(Command):
     def exec(self):
         if not state:
             return
-        
+
         article = state[self["id"]]
         r_config = config["reader"] if (
             config.has_section("reader")) else None
@@ -398,7 +398,9 @@ class Init(Command):
             "request_token={}&redirect_uri={}").format(
                 req_code, p_cli.redirect_uri)
 
-        print("Allow access to your account at: {}.\nAfter allowing access, press enter.".format(link))
+        print((
+                "Allow access to your account at: {}.\n"
+                "After allowing access, press enter.").format(link))
         input()
 
         creds = p_cli.get_access(req_code)
