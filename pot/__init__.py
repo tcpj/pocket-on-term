@@ -398,7 +398,7 @@ class Init(Command):
             "request_token={}&redirect_uri={}").format(
                 req_code, p_cli.redirect_uri)
 
-        print("Allow access to your account at: {}".format(link))
+        print("Allow access to your account at: {}.\nAfter allowing access, press enter.".format(link))
         input()
 
         creds = p_cli.get_access(req_code)
