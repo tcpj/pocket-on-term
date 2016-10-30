@@ -7,20 +7,17 @@ import json
 import sys
 import os
 import urwid
-import webbrowser
 
 from subprocess import Popen
 from subprocess import PIPE
 from subprocess import SubprocessError
 
 from bs4 import BeautifulSoup
-from bs4 import Tag
 
 from .pocketapi import PocketUtils
 
 
-
-class Reader(object):
+class Reader:
 
     PALETTE = [
         ("default", "dark gray", "white", "standout"),
@@ -30,9 +27,9 @@ class Reader(object):
         ("popup", "black", "dark green"),
         ("header", "white", "white", "bold")
     ]
-    
+
     term_w, term_h = os.get_terminal_size()
-    
+
     def __init__(self, article, config=None):
         self.article = article
         self.config = config if config else {
@@ -46,7 +43,6 @@ class Reader(object):
         self.buffer, self.ref = self.parse()
 
         self.set_up()
-
 
     def set_up(self):
         self.offset = 0
@@ -79,7 +75,7 @@ class Reader(object):
         elinks_params = [
             "elinks",
             "-dump", "1",
-            #"-dump-color-mode", "1",
+            #  "-dump-color-mode", "1",
             "-dump-width", str(self.term_w)
         ]
 
@@ -219,7 +215,7 @@ class Dialog(urwid.WidgetWrap):
         self.listbox.keypress(size, key)
 
 
-class Readability(object):
+class Readability:
     """Deprecated since i haxed Pocket API"""
     token = "4bce87cb2c7fa40f102378923718dbbc1c864317"
     api_url = "https://readability.com/api/content/v1/parser"
@@ -259,15 +255,15 @@ class Readability(object):
         return self.article[args[0]]
 
 
-class Article(object):
+class Article:
 
     def __init__(self, id, item):
         self.id = id
         self.__dict__.update(item)
-        self.has_image = True if self.has_image == "1" else False
-        self.has_video = True if self.has_video == "1" else False
-        self.favorite = True if self.favorite == "1" else False
-            
+        self.has_image = self.has_image == "1"
+        self.has_video = self.has_video == "1"
+        self.favorite = self.favorite == "1"
+
     @property
     def text(self):
 
@@ -277,23 +273,22 @@ class Article(object):
                 a_tag = bs.new_tag("a", href=links[itm_id]["src"])
                 a_tag.insert(0, "[{}]".format(pholder))
                 div.replace_with(a_tag)
-        
+
         response = PocketUtils.parser(self.resolved_url)
-        
+
         if response["responseCode"] != "200":
             return
-        
+
         bs = BeautifulSoup(response["article"], "html.parser")
 
         if self.has_image:
             replace_RIL(
                 bs.findAll("div", class_="RIL_IMG"),
                 "IMG", self.images)
-             
+
         if self.has_video:
             replace_RIL(bs.findAll(
                 "div", class_="RIL_VIDEO"),
                 "VIDEO", self.videos)
-        
-        return bs.prettify()
 
+        return bs.prettify()
